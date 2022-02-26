@@ -62,8 +62,8 @@ This simple image will allow to run our webcrawler server in a docker
 container. Its a first step to be able to deploy  our app in a K8s 
 environment
 
-**_NOTE:_**
-I use a local docker registry to illustrate that examplee but you can tag the built image and push it under any 
+> **Note**:
+I use a local private docker registry (node1) to illustrate that example but you can tag tag the built image in order to push it under any 
 registry you have access
 
 ```bash
