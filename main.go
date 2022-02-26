@@ -5,11 +5,11 @@ import (
 	//"github.com/spf13/cobra"
 	//"github.com/spf13/viper"
 	"os"
-	"pat/rest"
+	"webcrawler/rest"
 )
 
-const webCrawlerAPIDefaultServerCommand string = "webCrawler"
-
+// In case I have time to stored server parameters in a config file
+// and rely on cobra/viper to handle it (and command line)
 var cfgFile = ""
 
 func initConfig() {
@@ -23,8 +23,7 @@ func init() {
 }
 
 func main() {
-	shutdownCh := make(chan struct{})
-	err := rest.RunServer(shutdownCh)
+	err := rest.RunServer()
 	if err != nil {
 		fmt.Errorf(err.Error())
 		os.Exit(1)
