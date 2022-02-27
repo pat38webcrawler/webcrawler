@@ -20,7 +20,7 @@ Linux based instructions
 ```bash
 ~> git clone https://github.com/pat38webcrawler/webcrawler.git
 
-~> cd  webcrawler
+~> cd webcrawler
 
 # set  GOPATH accordingly 
 # check PATH and GOROOT variables
@@ -30,7 +30,6 @@ Linux based instructions
 ~> go get -t -v github.com/justinas/alice
 ~> go get -t -v github.com/pkg/errors
 ~> go get -t -v golang.org/x/net/html
-~> go get -v golang.org/x/net/html
 ```
 ## Build client and server 
 
@@ -55,7 +54,7 @@ In another terminal go to webcrawler/client directory
 ~> cd webcrawler/client
 # launch the client to send a request to the server
 
-~> ./wcclient localhost https://<your_site> 
+~> ./wcclient localhost 8900 https://<your_site> 
 ```
 ## Build a simple docker image 
 This simple image will allow to run our webcrawler server in a docker 
