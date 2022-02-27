@@ -1,15 +1,15 @@
 # WEBCRAWLER
 # Introduction 
 I made some implementation choices (generally commented in the code),  for 
-example the root url passed to the server that must be a full url 
-http[s]//base_site (http[s]:// is mandatory). 
+example the root url passed to the server  must be a full url 
+http[s]//base_site (e.g. http[s]:// is mandatory). 
 
-As asked in the exercise, all found linked that are not under 
+As asked in the intructions, all found linked that are not under 
 the base url are considered as leafs (so they appear in the displayed sitemap, 
-but we don't follow these links).
+but we don't follow these links). It obviously avoids scanning the entire internet :) 
 
 Only simple unit tests for utils package (for demonstration purpose) have been developed 
-(for  other packages, some mock should be written in order to develop unit tests) 
+(for  other packages, some mock should be written in order to develop relevant unit tests) 
 
 The initial version of the webcrawler (***basic*** git tag) was a naive approach based 
 on a recursive algorithm to compute sitemap. 
@@ -63,22 +63,22 @@ container. This is a first step towards deploying our app in a K8s
 environment
 
 > **Note**:
-I use a local private docker registry (node1) to illustrate this example, but you can tag the built image in order 
-> to push it under any registry you have access
+I use a local private docker registry (node1:5000) to illustrate this example, but you can tag the built image as you 
+> want in order to push it under any registry you have access.
 
 The **Dockerfile** is available under webcrawler directory 
 ```bash
 # go to webcrawler dir
 ~> cd <webcrawler>
 ~> docker build -t node1:5000/webcrawler:latest . 
-~> doxker push node1:5000/webcrawler:latest 
+~> docker push node1:5000/webcrawler:latest 
 
 # then you can start our server in a container 
 ~> docker run -p 8900:8900 -d node1:5000/webcrawler
 ```
 ## Deployment  on a K8S cluster (tested on a k3s distribution)
-> **Note**: I initially planned to use microk8s distribution, but i faced some limitations 
-> to install it on a WSL2 environment on my laptop (snap no available,...). I investigated these issues and made some 
+> **Note**: I initially planned to use microk8s distribution, but I faced some limitations 
+> to install it on a WSL2 environment on my laptop (snap not available...). I investigated these issues and made some 
 > progress. After some workarounds I was able to use snap on WSL2, but still the microk8s installation failed (controller 
 > didn't start). Due to lack of time I decided to rely on k3s distribution which is simpler to install.
 > 
@@ -86,8 +86,8 @@ The **Dockerfile** is available under webcrawler directory
 
 The **webcrawler.yaml** file contains the different resources needed to deploy my webcrawler container on the k3s cluster.
 Basically I created  a service to expose the webcrawler app running in a pod. I also configured an ingress to be 
-able to send request from outside. In this simple example, I only deploy 1 replica for the webcrawler pod, but number of 
-replica could be increase (for high availability or to scale the configuration to handle more requests)
+able to send requests from outside. In this simple example, I only deploy 1 replica for the webcrawler pod, but number of 
+replica could be increased (for high availability purpose or to scale the configuration to handle more requests)
 
 The content of the deployment yaml file is 
 ```
@@ -152,7 +152,7 @@ spec:
             port:
               number: 80
 ```
-I have preliminarily pushed my webcrawler docker image in a dockerhub repository ***patduc/demo:webcrawler***
+> I have preliminarily pushed my webcrawler docker image in a dockerhub repository ***patduc/demo:webcrawler***
 I also wanted to try with a local unsecured registry by modifying the rancher ***registries.yaml*** file, but 
 I faced some issues (k3s try to access the registry as a secured one though it is unsecured. It was probably a 
 configuration mistake on my side, but I didn't push the investigation deeper to save time)
