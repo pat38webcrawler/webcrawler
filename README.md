@@ -56,6 +56,20 @@ In another terminal go to webcrawler/client directory
 
 ~> ./wcclient localhost 8900 https://<your_site> 
 ```
+
+> **Note** : After reading again the instructions  it was not totally clear for me 
+> if we need to compute the site map under the provided url or the full sitemap of the "root" site containing 
+> the provided url, I choose to make it configurable (if full=true is provided in request parameter of the request 
+> or ***full*** is provided as the last parameter of the wcclient). So for example if you provide 
+> "https://mysite.com/foo", and  if you run : 
+> 
+> ~> wcclient localhost 8900 https://mysite.com/foo **full** 
+>
+> then the whole site map under  https://mysite.com will be returned, otherwise if you don't pass the **full** parameter
+> 
+> ~> wcclient localhost 8900 https://mysite.com/foo
+> 
+> only the sitemap under https://mysite.com/foo will be returned
 ## Build a simple docker image 
 This simple image will allow to run our webcrawler server in a docker 
 container. This is a first step towards deploying our app in a K8s 

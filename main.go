@@ -25,7 +25,7 @@ func init() {
 func main() {
 	err := rest.RunServer()
 	if err != nil {
-		fmt.Errorf(err.Error())
+		fmt.Printf(err.Error())
 		os.Exit(1)
 	}
 	fmt.Printf("Exiting main...\n")

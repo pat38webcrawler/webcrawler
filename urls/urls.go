@@ -76,7 +76,7 @@ func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Unexpected return code when trying to get url: %s (%d)", url, resp.Status)
+		return nil, fmt.Errorf("Unexpected return code when trying to get url: %s (%d)", url.Url, resp.StatusCode)
 	}
 
 	// We don't try follow links with mime type <> text/html
@@ -138,7 +138,7 @@ func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore 
 
 		}
 	}
-	return links
+	return links // normally this code will not be reached , but just in case
 }
 
 // helpers function to print the computed sitemap stored in root Node data struct

@@ -10,8 +10,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"runtime/debug"
-
 	// import profiling package
 	_ "net/http/pprof"
 )
@@ -136,8 +134,6 @@ func recoverHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Errorf("panic: %s", err)
-				fmt.Errorf("The corresponding stack is\n%s", debug.Stack())
 				rerr := &Error{ID: "internal_server_error", Status: 500, Title: "Internal Server Error", Detail: fmt.Sprint(err)}
 				writeError(w, r, rerr)
 			}
@@ -158,7 +154,6 @@ func (s *Server) registerHandlers() error {
 }
 
 func writeError(w http.ResponseWriter, r *http.Request, err *Error) {
-	fmt.Errorf(err.Detail)
 	w.WriteHeader(err.Status)
 	encodeJSONResponse(w, r, Errors{Errors: []*Error{err}})
 }

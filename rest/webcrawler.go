@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"webcrawler/urls"
+	"webcrawler/utils"
 )
 
 var Ongoing = false
@@ -40,6 +41,20 @@ func (s *Server) webCrawler(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, badRequestError)
 		Ongoing = false
 		return
+	}
+
+	// set baseurl to corresponding root url (e.g https://www.foo.com/bar will  https://www.foo.bar) if full parameter
+	// has been provided and is equal to "true"
+
+	if value, ok := r.URL.Query()["full"]; ok {
+		fmt.Printf("Pat Add on est la avec %s\n ", value[0])
+		full := strings.ToLower(strings.TrimSpace(value[0]))
+		if full == "true" {
+			baseurl = utils.GetRootURL(baseurl)
+		}
+	} else {
+		fmt.Printf("Pat Add ha ben non  %+v\n ", r.URL.Query())
+
 	}
 
 	base, err := url.Parse(baseurl)

@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"webcrawler/urls"
 	"webcrawler/utils"
 )
@@ -16,12 +18,16 @@ import (
 
 func main() {
 	// we check that there is exactly 3 parameters (host or ip, port and base url passed to the client
-	if len(os.Args) != 4 {
-		log.Fatalf("Usage: %s <host_or_ip> <port> <https://myserver.com> ", os.Args[0])
+	if len(os.Args) != 4 && len(os.Args) != 5 {
+		log.Fatalf("Usage: %s <host_or_ip> <port> <https://myserver.com> [full] ", os.Args[0])
 	}
 	host := os.Args[1]
 	port := os.Args[2]
-
+	full := "false"
+	if len(os.Args) == 5 && strings.TrimSpace(os.Args[4]) == "full" {
+		full = "true"
+	}
+	fmt.Printf("Pat Add full is %s  (len=%d, val=%s)\n", full, len(os.Args), strings.TrimSpace(os.Args[4]))
 	// run some checks on port and based url
 	if _, err := strconv.Atoi(port); err != nil {
 		log.Fatalf("Specified port %s is not an int", port)
@@ -48,6 +54,13 @@ func main() {
 	//Initialization of the parameter used to pass the base d nto initiate the web crawling
 	params := url.Values{}
 	params.Set("url", urltoCrawl)
+
+	// if mode is "full"
+	// set full parameter to "true"
+	if full == "true" {
+		params.Set("full", "true")
+	}
+
 	request.URL.RawQuery = params.Encode()
 
 	// send the actual request
