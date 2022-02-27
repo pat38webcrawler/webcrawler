@@ -16,6 +16,10 @@ import (
 	_ "net/http/pprof"
 )
 
+// this code has been reused from a project of mine. It allows to start a simple Serever exposing a rest API.
+// for this  webcrawler application, we will have only one single endpoinr ('webcrawler') that will compute the
+// provided baseurl sitemap
+
 type Error struct {
 	// ID of the error
 	ID string `json:"id"`
@@ -43,6 +47,9 @@ type ContextKey string
 func (r *router) Get(path string, handler http.Handler) {
 	r.GET(path, wrapHandler(handler))
 }
+
+// following function are not called in our initial version of webcrawler
+// they could be used if we want to exend the capabilities of the server
 
 func (r *router) Post(path string, handler http.Handler) {
 	r.POST(path, wrapHandler(handler))
@@ -79,7 +86,7 @@ func newRouter() *router {
 	return &router{httprouter.New()}
 }
 
-// A Server is an HTTP server that runs the FastML Engine-API REST API
+// A Server is an HTTP server that runs the webCrawler REST API
 type Server struct {
 	router   *router
 	listener net.Listener
@@ -145,8 +152,7 @@ func (s *Server) registerHandlers() error {
 	var commonHandlers alice.Chain
 	commonHandlers = alice.New(recoverHandler)
 
-	//webcrawler
-	// s.router.Post("/webcrawler", commonHandlers.ThenFunc(s.createExperimentHandler))
+	// definition webcrawler endpoint. it calls the server webcrawler handler function
 	s.router.Get("/webcrawler", commonHandlers.Append(acceptHandler("application/json")).ThenFunc(s.webCrawler))
 	return nil
 }

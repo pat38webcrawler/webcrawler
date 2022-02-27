@@ -7,6 +7,7 @@ import (
 	"syscall"
 )
 
+//Shutdown stop properly the webcrawler server
 func (s *Server) Shutdown() {
 	if s != nil {
 
@@ -18,7 +19,7 @@ func (s *Server) Shutdown() {
 	}
 }
 
-// RunServer starts the webcrawler  server
+// RunServer starts the webcrawler server
 func RunServer() error {
 	httpServer, err := NewServer()
 	if err != nil {

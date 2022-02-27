@@ -1,0 +1,63 @@
+# example of k8s deployment file used to deploy our webcrawler app on a k3s installation
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webcrawler-deployment
+  namespace: webcrawler-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webcrawler
+  template:
+    metadata:
+      labels:
+        app: webcrawler
+    spec:
+      containers:
+        - name: webcrawler
+          image: patduc/demo:webcrawler
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8900
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webcrawler-service
+  namespace: webcrawler-demo
+spec:
+  ports:
+    - port: 80
+      targetPort: 8900
+      name: tcp
+  selector:
+    app: webcrawler
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webcrawler-ingress
+  namespace: webcrawler-demo
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webcrawler-service
+                port:
+                  number: 80
+  ```

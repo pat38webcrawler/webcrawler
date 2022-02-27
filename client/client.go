@@ -7,21 +7,32 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"webcrawler/urls"
+	"webcrawler/utils"
 )
 
 // client code
 
 func main() {
-	// we check that there is exactly 2 parameters passed to the client
-	if len(os.Args) != 3 {
-		log.Fatalf("Usage: %s <host_or_ip> <https://myserver.com> ", os.Args[0])
+	// we check that there is exactly 3 parameters (host or ip, port and base url passed to the client
+	if len(os.Args) != 4 {
+		log.Fatalf("Usage: %s <host_or_ip> <port> <https://myserver.com> ", os.Args[0])
 	}
 	host := os.Args[1]
-	urltoCrawl := os.Args[2]
+	port := os.Args[2]
+
+	// run some checks on port and based url
+	if _, err := strconv.Atoi(port); err != nil {
+		log.Fatalf("Specified port %s is not an int", port)
+	}
+	urltoCrawl := os.Args[3]
+	if !utils.IsCorrrectURL(urltoCrawl) {
+		log.Fatalf("Specified base url  '%s' seems not correct (should be defined as 'http[s]://mysite'", port)
+	}
 
 	// get an http.Client
-	client, err := client(host)
+	client, err := client(host, port)
 	if err != nil {
 		log.Fatalln("An error occurred" + err.Error())
 	}

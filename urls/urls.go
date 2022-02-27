@@ -50,20 +50,16 @@ var VisitedURLs = make(map[string]bool)
 // is considered as a leaf and we not follow this link (ask in the exercise)
 
 func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
-	fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s\n", url.Node, url.Url)
-
 	var links []*Urlsstore
 
 	// check if the url has the expected form http[s]://
 	// that's a design choice. We could refine this check
 	if !utils.IsCorrrectURL(url.Url) {
-		fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we return because urlpattern doesn't match\n", url.Node, url.Url)
 		return links, nil
 	}
 
 	// check if the url is under the initial base url
 	if !utils.IsUnderBaseUrl(baseurl.String(), url.Url) {
-		fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we return because basepattern doesn't match\n", url.Node, url.Url)
 		return links, nil
 	}
 
@@ -76,28 +72,23 @@ func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
 	}()
 
 	if err != nil {
-		fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we return because http get failed  %s\n", url.Node, url.Url, err)
 		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we return because http status <>200 %d  %s\n", url.Node, url.Url, resp.StatusCode)
 		return nil, fmt.Errorf("Unexpected return code when trying to get url: %s (%d)", url, resp.Status)
 	}
 
 	// We don't try follow links with mime type <> text/html
 	// It's a choice and is could maybe be refined
 	if !utils.IsTextURL(resp) {
-		//	fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we return because url is not a text url \n", url.Node, url.Url)
 		return nil, nil
 	}
 
 	access.Lock() // take a lock to avoid concurrent read/write on the map
 	if !VisitedURLs[url.Url] {
-		fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we add to already seen  \n", url.Node, url.Url)
 		VisitedURLs[url.Url] = true
 	} else {
-		fmt.Printf("Pat Add in SiteMap url.Node=%p and url=%s we return because url already seen \n", url.Node, url.Url)
 		return nil, nil
 	}
 	access.Unlock()
@@ -109,8 +100,6 @@ func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
 }
 
 func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore {
-	fmt.Printf("Pat Add in getlinks url.Node=%p and URL=%s\n", parent.Node, parent.Url)
-
 	var links []*Urlsstore
 	z := html.NewTokenizer(body)
 	for {
@@ -118,7 +107,6 @@ func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore 
 
 		switch token {
 		case html.ErrorToken:
-			//fmt.Printf("Pat Add from getLinks we return the following list %+v\n", links)
 			return links
 		case html.StartTagToken, html.EndTagToken:
 			token := z.Token()
@@ -127,7 +115,7 @@ func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore 
 					if a.Key == "href" { // we are interested only by http links
 						u, err := url.Parse(a.Val)
 						if err != nil || u == nil {
-							log.Printf("Error parsing url %s\n", a.Val)
+							log.Printf("Error parsing url %s (%v, %v)\n", a.Val, err, u)
 							continue
 						}
 						lta := baseUrl.ResolveReference(u).String() // we try to get the full url
@@ -142,7 +130,6 @@ func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore 
 								us.Skip = false
 							}
 							links = append(links, us)
-							//		fmt.Printf("Pat Add link is %s, parent is %s\n", lta, parent)
 						}
 						access.Unlock()
 					}

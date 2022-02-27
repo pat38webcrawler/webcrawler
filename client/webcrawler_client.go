@@ -19,22 +19,22 @@ func (c *wcClient) NewRequest(method, path string, body io.Reader) (*http.Reques
 }
 
 // function that return a http client to ocnnect to webrawler server (port 8900)
-func (c *wcClient) getClient(host string) (baseURL string, client *http.Client, err error) {
+func (c *wcClient) getClient(host string, port string) (baseURL string, client *http.Client, err error) {
 	client = &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
-	baseURL = "http://" + host + ":8900" // port is fixed but could have been store in a config file or env variable
+	baseURL = "http://" + host + ":" + port
 	return baseURL, client, nil
 }
 
 // function to get a client
-func client(host string) (*wcClient, error) {
+func client(host, port string) (*wcClient, error) {
 	var err error
 	wcClient := wcClient{}
 
-	wcClient.baseURL, wcClient.Client, err = wcClient.getClient(host)
+	wcClient.baseURL, wcClient.Client, err = wcClient.getClient(host, port)
 	if err != nil {
 		return nil, err
 	}
