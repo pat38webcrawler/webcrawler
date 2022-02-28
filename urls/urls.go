@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"path"
 	"regexp"
 	"sync"
 	"webcrawler/utils"
@@ -34,23 +33,34 @@ type Urlsstore struct {
 	Skip bool
 }
 
-// mutex to control access to map
-var access sync.Mutex
+// mutex to control Access to map
+var Access sync.Mutex
 
 // regexp to detect link with parameter and anchor I chose to not follow that link in the web crawler mechanism.
 // It could be a configurable parameter
 var q_regexp = regexp.MustCompile(`.*[\?#].*`)
 
 // store Urls already visited to avoid cycles (reseted after each execution)
-var VisitedURLs = make(map[string]bool)
+//var VisitedURLs = make(map[string]bool)
 
 // this function aims to build a sitemap for  the url passed in argument (url.URL field)
 // in collect all links of the considered page (make some checks) and return these links as a list of URLs
 // to be treated as well. if links not strat with the based url pattern (e.g  the root url we provided) then it
 // is considered as a leaf and we not follow this link (ask in the exercise)
 
-func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
+func Sitemap(url *Urlsstore, baseurl *url.URL, alreadyScanned map[string]bool) ([]*Urlsstore, error) {
 	var links []*Urlsstore
+	// debug purpose only log, should be removed if we don't need it
+	//fmt.Printf("DEBUG: Sitemap  %s, skip=%v\n", url.Url, url.Skip)
+
+	Access.Lock() // take a lock to avoid concurrent  map read/write
+	if !alreadyScanned[url.Url] {
+		alreadyScanned[url.Url] = true
+	} else {
+		Access.Unlock()
+		return nil, nil
+	}
+	Access.Unlock()
 
 	// check if the url has the expected form http[s]://
 	// that's a design choice. We could refine this check
@@ -63,7 +73,12 @@ func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
 		return links, nil
 	}
 
-	// get the content of the page for teh considered url
+	// skip scan if url is a leaf
+	if url.Skip {
+		return links, nil
+	}
+
+	// get the content of the page for the considered url
 	resp, err := http.Get(url.Url)
 	defer func() {
 		if resp != nil && resp.Body != nil {
@@ -85,21 +100,16 @@ func Sitemap(url *Urlsstore, baseurl *url.URL) ([]*Urlsstore, error) {
 		return nil, nil
 	}
 
-	access.Lock() // take a lock to avoid concurrent read/write on the map
-	if !VisitedURLs[url.Url] {
-		VisitedURLs[url.Url] = true
-	} else {
-		return nil, nil
-	}
-	access.Unlock()
-
 	//  get and return all links of that page
-	list := getLinks(resp.Body, url, baseurl)
+	list := getLinks(resp.Body, url, baseurl, alreadyScanned)
 
 	return list, nil
 }
 
-func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore {
+func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL, alreadyScanned map[string]bool) []*Urlsstore {
+	// debug purpose only log, should be removed if we don't need it
+	//fmt.Printf("DEBUG: getLinks  %s\n", parent.Url)
+
 	var links []*Urlsstore
 	z := html.NewTokenizer(body)
 	for {
@@ -118,20 +128,25 @@ func getLinks(body io.Reader, parent *Urlsstore, baseUrl *url.URL) []*Urlsstore 
 							log.Printf("Error parsing url %s (%v, %v)\n", a.Val, err, u)
 							continue
 						}
-						lta := baseUrl.ResolveReference(u).String() // we try to get the full url
-						access.Lock()
-						if !VisitedURLs[lta] {
+						//treatment of relative path
+						lurl := baseUrl.ResolveReference(u) // we try to get the full url
+						// clean URL path
+						utils.CleanPath(lurl)
+						lta := lurl.String()
+
+						Access.Lock() // lock to avoid map concurrent access
+						if !alreadyScanned[lta] {
 							child := Node{Url: lta}
 							parent.Node.Children = append(parent.Node.Children, &child)
 							us := &Urlsstore{Url: lta, Node: &child, Skip: false}
-							if q_regexp.MatchString(path.Base(lta)) {
+							if q_regexp.MatchString(lta) {
 								us.Skip = true
 							} else {
 								us.Skip = false
 							}
 							links = append(links, us)
 						}
-						access.Unlock()
+						Access.Unlock()
 					}
 				}
 			}

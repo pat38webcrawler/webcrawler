@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -9,8 +8,6 @@ import (
 	"webcrawler/urls"
 	"webcrawler/utils"
 )
-
-var Ongoing = false
 
 var scan_token = make(chan struct{}, 20)
 
@@ -20,17 +17,9 @@ func (s *Server) webCrawler(w http.ResponseWriter, r *http.Request) {
 	// Common errors to return
 	var badRequestError = &Error{ID: "bad_request", Status: 400, Title: "Bad request", Detail: "No based url specified."}
 	var badURLError = &Error{ID: "bad_request", Status: 400, Title: "Bad request", Detail: "Provided url can't be parsed."}
-	var ServiceUnavailableError = &Error{ID: "bad_request", Status: 503, Title: "Service Unvailable", Detail: "The web crawler is already running."}
-
-	// check if a request is already process by the server and return if it is the case
-	// it's a design choice for the ake of simplicity, it could be improve to run request in //
-	if Ongoing == true {
-		writeError(w, r, ServiceUnavailableError)
-		return
-	}
 
 	// indicate that the serve ris processing a client request
-	Ongoing = true
+	//Ongoing = true
 
 	// get the base URL from the client request
 	var baseurl string
@@ -39,7 +28,6 @@ func (s *Server) webCrawler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Printf("No based url specified.\n")
 		writeError(w, r, badRequestError)
-		Ongoing = false
 		return
 	}
 
@@ -47,24 +35,21 @@ func (s *Server) webCrawler(w http.ResponseWriter, r *http.Request) {
 	// has been provided and is equal to "true"
 
 	if value, ok := r.URL.Query()["full"]; ok {
-		fmt.Printf("Pat Add on est la avec %s\n ", value[0])
 		full := strings.ToLower(strings.TrimSpace(value[0]))
 		if full == "true" {
 			baseurl = utils.GetRootURL(baseurl)
 		}
-	} else {
-		fmt.Printf("Pat Add ha ben non  %+v\n ", r.URL.Query())
-
 	}
 
 	base, err := url.Parse(baseurl)
+
 	if err != nil {
 		log.Printf(err.Error() + "\n")
 		badRequestError.Detail = err.Error()
 		writeError(w, r, badURLError)
-		Ongoing = false
 		return
 	}
+	baseurl = base.String()
 
 	//initialize the root Node of our sitemap
 	// this node will be return to the client at the end of the processing
@@ -88,42 +73,42 @@ func (s *Server) webCrawler(w http.ResponseWriter, r *http.Request) {
 		list := <-urlslist
 
 		for _, url := range list {
+			urls.Access.Lock()
 			if !alreadyScanned[url.Url] {
 				n++
-				alreadyScanned[url.Url] = true
+				//alreadyScanned[url.Url] = true
+				urls.Access.Unlock()
 				go func(url *urls.Urlsstore) {
 
-					urlslist <- scanUrl(url, base)
+					urlslist <- scanUrl(url, base, alreadyScanned)
 				}(url)
+			} else {
+				urls.Access.Unlock()
 			}
 		}
 	}
 
 	// for debugging purpose we print the sitemap before returning
-	// it can be commented
-	urls.PrintNode(&root, 0)
+	// it can be commented/uncommented without impact on sitemap computation
+	// urls.PrintNode(&root, 0)
 
 	// encode the root node and seni it in to the client
 	encodeJSONResponse(w, r, root)
 
-	// we reinitialize the VisitedUrls map for the nrxt request
-	urls.VisitedURLs = make(map[string]bool)
-	// and we inidctes that the server is ready to handle a new request
-	Ongoing = false
 }
 
 // scanUrl : this method with until it can acquire a lock (currently the number of token is fixed to 20
 // but it could be a parameter provided at server start. When a token is acquired, it computes the sitemap of
 // passed url myurl (takining into account the initial base url baseurl). Then the list of URls us passed in the urlslist
 // to be processed in turn
-func scanUrl(myurl *urls.Urlsstore, baseurl *url.URL) []*urls.Urlsstore {
+func scanUrl(myurl *urls.Urlsstore, baseurl *url.URL, alreadyScanned map[string]bool) []*urls.Urlsstore {
 	scan_token <- struct{}{} // we wait to acquire a token
 
 	// debug purpose only log, should be removed if we don't need it
-	fmt.Printf("DEBUG: ScanUrl  %s\n", myurl.Url)
+	//fmt.Printf("DEBUG: ScanUrl  %s\n", myurl.Url)
 
 	// we get the list of links of the considered url (they will be added on the urlslist  channel)
-	list, err := urls.Sitemap(myurl, baseurl)
+	list, err := urls.Sitemap(myurl, baseurl, alreadyScanned)
 	<-scan_token // no it's time to release our token
 
 	if err != nil {

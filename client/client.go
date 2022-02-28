@@ -26,7 +26,7 @@ func main() {
 	if len(os.Args) == 5 && strings.TrimSpace(os.Args[4]) == "full" {
 		full = "true"
 	}
-	// run some checks on port and based url
+	// run checks on port and based url
 	if _, err := strconv.Atoi(port); err != nil {
 		log.Fatalf("Specified port %s is not an int", port)
 	}

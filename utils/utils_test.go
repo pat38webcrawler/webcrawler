@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"net/url"
 	"regexp"
 	"testing"
 )
@@ -99,5 +100,32 @@ func TestGetRootURL(t *testing.T) {
 	rooturl = GetRootURL(url)
 	if rooturl != "https:/www.example.com/bar" {
 		t.Errorf("Root url for '%s' should be  '\"https:/www.example.com/bar\" ' and is actually '%s'", url, rooturl)
+	}
+}
+
+func TestGCleanPath(t *testing.T) {
+	baseurl := "https://site.com//first/////"
+	base, _ := url.Parse(baseurl)
+	CleanPath(base)
+	if base.String() != "https://site.com/first" {
+		t.Errorf("Url %s was not properly cleaned. Expected 'https://site.com/first', got '%s'", baseurl, base.String())
+	}
+	baseurl = "http://site.com//first/////"
+	base, _ = url.Parse(baseurl)
+	CleanPath(base)
+	if base.String() != "http://site.com/first" {
+		t.Errorf("Url %s was not properly cleaned. Expected 'http://site.com/first', got '%s'", baseurl, base.String())
+	}
+	baseurl = "http://site.com//first#second"
+	base, _ = url.Parse(baseurl)
+	CleanPath(base)
+	if base.String() != "http://site.com/first#second" {
+		t.Errorf("Url %s was not properly cleaned. Expected 'http://site.com/first#second', got '%s'", baseurl, base.String())
+	}
+	baseurl = "http://site.com///first/second/third?parameter1=value1&parameter2=value2"
+	base, _ = url.Parse(baseurl)
+	CleanPath(base)
+	if base.String() != "http://site.com/first/second/third?parameter1=value1&parameter2=value2" {
+		t.Errorf("Url %s was not properly cleaned. Expected 'http://site.com/first/second/third?parameter1=value1&parameter2=value2', got '%s'", baseurl, base.String())
 	}
 }

@@ -1,10 +1,10 @@
 # WEBCRAWLER
 # Introduction 
 I made some implementation choices (generally commented in the code),  for 
-example the root url passed to the server  must be a full url 
+example the root url passed to the server must be a full url 
 http[s]//base_site (e.g. http[s]:// is mandatory). 
 
-As asked in the intructions, all found linked that are not under 
+As asked in the instructions, all found linked that are not under 
 the base url are considered as leafs (so they appear in the displayed sitemap, 
 but we don't follow these links). It obviously avoids scanning the entire internet :) 
 
@@ -14,7 +14,19 @@ Only simple unit tests for utils package (for demonstration purpose) have been d
 The initial version of the webcrawler (***basic*** git tag) was a naive approach based 
 on a recursive algorithm to compute sitemap. 
 In later versions, in order to improve performance and avoid stack overflow issues, I get rid of 
-recursion to compute the sitemap and I also rely on concurrent goroutines to improve performance
+recursion to compute the sitemap and I also rely on concurrent goroutines to improve performance. 
+
+> **Note** : I realized while reading again instructions before submitting my results that it 
+>  would be preferable to have a server able to handle multiple requests in parallel. My initial choice was to 
+> implement a server that handle only one request at a time. 
+> Thus I have adapted the code in last version (tag 6.0) to handle multiple requests 
+> (5.0 tag is the single request version)  
+> In this final release there was still place for improvements, for example add logging capabilities
+> to be able to enable or disable debug log to investigate issue. 
+
+# basic explanations 
+![struct](struct.PNG)
+
 ## Setup 
 Linux based instructions
 ```bash
@@ -39,6 +51,9 @@ In webcrawler directory
 ~> cd client 
 ~> go build -o wcclient 
 ~> cd ..
+
+# to run unit tests (still in webcrawler directory)
+~>  go test ./... 
 ```
 
 ## Launch server and lauch a request using client 

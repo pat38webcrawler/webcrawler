@@ -2,6 +2,8 @@ package utils
 
 import (
 	"net/http"
+	"net/url"
+	"path"
 	"regexp"
 )
 
@@ -34,4 +36,10 @@ func GetRootURL(url string) string {
 	pattern := regexp.MustCompile("^(https?://[^/]*).*")
 	rootUrl := pattern.ReplaceAllString(url, "$1")
 	return (rootUrl)
+}
+
+// CleanPath take an url pointer and clean its path (clean duplicate '/' ...
+func CleanPath(u *url.URL) {
+	u.Path = path.Clean(u.Path)
+	u.RawPath = path.Clean(u.RawPath)
 }
