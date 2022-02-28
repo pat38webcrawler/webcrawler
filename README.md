@@ -2,7 +2,9 @@
 # Introduction 
 I made some implementation choices (generally commented in the code),  for 
 example the root url passed to the server must be a full url 
-http[s]//base_site (e.g. http[s]:// is mandatory). 
+http[s]//base_site (e.g. http[s]:// is mandatory). Another example,  mail urls 
+(such as 'mailto:smith@example.com') are 
+considered as leaf and thus displayed in the final sitemap. 
 
 As asked in the instructions, all found linked that are not under 
 the base url are considered as leafs (so they appear in the displayed sitemap, 
