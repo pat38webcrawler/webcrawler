@@ -28,24 +28,24 @@ recursion to compute the sitemap and I also rely on concurrent goroutines to imp
 
 ## Basic explanations 
 ### Server
-The webcrawler server exposes a very simple Rest API, with one single endpoint which allow to 
+The webcrawler server exposes a very simple Rest API, with one single endpoint allowing to 
 compute the sitemap of the provided base url (provided in client request parameters).
 Basically it could be represented as follows :
 
 ![struct](global.PNG)
 
-For the sake of simplicity the server listen on port 8900 (but it coud be control either by a config parameter or
-by a parameter path at server laubch time)
+For the sake of simplicity the server listen on port 8900 (but it coud be controlled either by a config parameter or
+by a parameter passed at server laubch time)
 
 In order to improve performance and reliability, I don't rely on a recursive algorithm to compute the sitemap, 
-though it seems the natural approach. The server compute concurrently the sitemap using goroutines (Could be seen as 
-workers thread). I limited the number of workers to 20 but once again it could be very easily configurable via a config 
+though it seems the natural approach. The server computes concurrently the sitemap using goroutines (Could be seen as 
+worker threads). I limited the number of workers to 20 but once again it could be very easily configurable via a config 
 parameter. 
 
 ### Data structure
 The data structure to store the site map is really simple (see schema below).
-It logically represents a tree and thus consist  of a chained struct
-Where Each node represents an url of
+It logically represents a tree and thus consists on a chained struct
+where each node represents an url of
 the sitemap and contains a list of children nodes (representing
 its different child urls). 
 
@@ -98,9 +98,9 @@ In another terminal go to webcrawler/client directory
 
 > **Note** : After reading again the instructions  it was not totally clear for me 
 > if we need to compute the site map under the provided url or the full sitemap of the "root" site containing 
-> the provided url, I choose to make it configurable (if full=true is provided in request parameter of the request 
-> or ***full*** is provided as the last parameter of the wcclient). So for example if you provide 
-> "https://mysite.com/foo", and  if you run : 
+> the provided url. Thus I choose to make it configurable (if full=true is provided in request parameter of the request 
+> or ***full*** is provided as the last parameter of the wcclient then this option is activated). So for example 
+> if you provide "https://mysite.com/foo" as root url, and if you run : 
 > 
 > ~> wcclient localhost 8900 https://mysite.com/foo **full** 
 >
@@ -109,6 +109,7 @@ In another terminal go to webcrawler/client directory
 > ~> wcclient localhost 8900 https://mysite.com/foo
 > 
 > only the sitemap under https://mysite.com/foo will be returned
+
 ## Build a simple docker image 
 This simple image will allow to run our webcrawler server in a docker 
 container. This is a first step towards deploying our app in a K8s 
@@ -130,7 +131,7 @@ The **Dockerfile** is available under webcrawler directory
 ```
 ## Deployment  on a K8S cluster (tested on a k3s distribution)
 > **Note**: I initially planned to use microk8s distribution, but I faced some limitations 
-> to install it on a WSL2 environment on my laptop (snap not available...). I investigated these issues and made some 
+> to install it on WSL2 environment on my laptop (snap not available...). I investigated these issues and made some 
 > progress. After some workarounds I was able to use snap on WSL2, but still the microk8s installation failed (controller 
 > didn't start). Due to lack of time I decided to rely on k3s distribution which is simpler to install.
 > 
@@ -139,9 +140,11 @@ The **Dockerfile** is available under webcrawler directory
 The **webcrawler.yaml** file contains the different resources needed to deploy my webcrawler container on the k3s cluster.
 Basically I created  a service to expose the webcrawler app running in a pod. I also configured an ingress to be 
 able to send requests from outside. In this simple example, I only deploy 1 replica for the webcrawler pod, but number of 
-replica could be increased (for high availability purpose or to scale the configuration to handle more requests)
+replica could be increased (for high availability purpose or to scale the configuration to handle more requests).
+Another choice should be to rely on a load balancer to hande the client traffic on the different deployed webcrawler replicas.
+I had a quick look but don't find an easy way to setup a load balancer with the k3s rancher distribution. 
 
-The content of the deployment yaml file is 
+The content of the deployment yaml file is :
 ```
 apiVersion: apps/v1
 kind: Deployment
