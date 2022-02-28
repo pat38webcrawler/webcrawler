@@ -21,10 +21,34 @@ recursion to compute the sitemap and I also rely on concurrent goroutines to imp
 > implement a server that handle only one request at a time. 
 > Thus I have adapted the code in last version (tag 6.0) to handle multiple requests 
 > (5.0 tag is the single request version)  
-> In this final release there was still place for improvements, for example add logging capabilities
-> to be able to enable or disable debug log to investigate issue. 
+> In this final release there was still place for improvements, for example we could add logging capabilities
+> to be able to enable or disable debug log to investigate issues. We could also improve the usability 
+> of bothe server and client by adding configuration file and/or env variables and also expose a pretty command 
+> line (we could rely on viper and cobra packages for that purpose).
 
-# basic explanations 
+## Basic explanations 
+### Server
+The webcrawler server exposes a very simple Rest API, with one single endpoint which allow to 
+compute the sitemap of the provided base url (provided in client request parameters).
+Basically it could be represented as follows :
+
+![struct](global.PNG)
+
+For the sake of simplicity the server listen on port 8900 (but it coud be control either by a config parameter or
+by a parameter path at server laubch time)
+
+In order to improve performance and reliability, I don't rely on a recursive algorithm to compute the sitemap, 
+though it seems the natural approach. The server compute concurrently the sitemap using goroutines (Could be seen as 
+workers thread). I limited the number of workers to 20 but once again it could be very easily configurable via a config 
+parameter. 
+
+### Data structure
+The data structure to store the site map is really simple (see schema below).
+It logically represents a tree and thus consist  of a chained struct
+Where Each node represents an url of
+the sitemap and contains a list of children nodes (representing
+its different child urls). 
+
 ![struct](struct.PNG)
 
 ## Setup 
